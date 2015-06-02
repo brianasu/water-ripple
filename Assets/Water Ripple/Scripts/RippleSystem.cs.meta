@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: c6ac15df3f9af46f0acfe9b2618c8623
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - waterShader: {fileID: 4800000, guid: 35199131c6fdb45a984786354c663788, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
