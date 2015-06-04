@@ -58,20 +58,20 @@ Shader "Custom/Water Ripple/Desktop"
 			UNITY_INITIALIZE_OUTPUT(Input, o);
 
 			float3 texSize = float3(_MainTex_TexelSize.x, -_MainTex_TexelSize.x, 0);
-	 		float2 uv = v.texcoord.xy;
+	 		float4 uv = float4(v.texcoord.xy, 0, 0);
 	 		
 			float samples = tex2Dlod(_MainTex, float4(v.texcoord.xy, 0, 0)).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.xzzz * 1).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.yzzz * 1).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.zxzz * 1).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.zyzz * 1).r;
+			samples += tex2Dlod(_MainTex, uv + texSize.xzzz).r;
+			samples += tex2Dlod(_MainTex, uv + texSize.yzzz).r;
+			samples += tex2Dlod(_MainTex, uv + texSize.zxzz).r;
+			samples += tex2Dlod(_MainTex, uv + texSize.zyzz).r;
 			samples /= 5;
 			v.vertex.y += samples * _Height;
 			
-			fixed right		= tex2Dlod(_MainTex, uv + texSize.xzzz * 1).r;
-			fixed left		= tex2Dlod(_MainTex, uv + texSize.yzzz * 1).r;
-			fixed top		= tex2Dlod(_MainTex, uv + texSize.zxzz * 1).r;
-			fixed bottom	= tex2Dlod(_MainTex, uv + texSize.zyzz * 1).r;
+			fixed right		= tex2Dlod(_MainTex, uv + texSize.xzzz).r;
+			fixed left		= tex2Dlod(_MainTex, uv + texSize.yzzz).r;
+			fixed top		= tex2Dlod(_MainTex, uv + texSize.zxzz).r;
+			fixed bottom	= tex2Dlod(_MainTex, uv + texSize.zyzz).r;
 			
             float3 va = normalize(float3(1, left - right, 0));
             float3 vb = normalize(float3(0, bottom - top, 1));
