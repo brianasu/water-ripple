@@ -61,22 +61,24 @@ Shader "Hidden/Water Ripple/Render"
 
 	fixed4 frag(v2f i) : COLOR
 	{
-		fixed orig = tex2D(_MainTex, i.uv).r;
-		return orig + step(1 - _DropSize, 1 - length(_MousePos.xy - i.uv));
+		fixed orig = tex2D(_MainTex, i.uv).r * 2 - 1;
+		float newVal = orig + step(1 - _DropSize, 1 - length(_MousePos.xy - i.uv));
+		return (newVal + 1) / 2.0;
 	}
 
 	fixed4 fragPropogate(v2fMultiTap i) : COLOR
 	{
-		float sample = tex2D(_MainTex, i.uv[1]).r;
-		sample += tex2D(_MainTex, i.uv[2]).r;
-		sample += tex2D(_MainTex, i.uv[3]).r;
-		sample += tex2D(_MainTex, i.uv[4]).r;
+		float sample = tex2D(_MainTex, i.uv[1]).r * 2 - 1;
+		sample += tex2D(_MainTex, i.uv[2]).r * 2 - 1;
+		sample += tex2D(_MainTex, i.uv[3]).r * 2 - 1;
+		sample += tex2D(_MainTex, i.uv[4]).r * 2 - 1;
+		sample /= 2.0;
 
-		sample /= 4.0;
+		float newValue = sample + -(tex2D(_PrevTex, i.uv[0]).r * 2 - 1);
 
-		float newValue = sample * 2.0 + -tex2D(_PrevTex, i.uv[0]).r;
-
-		return newValue * _Damping;
+		float dampedValue = newValue * _Damping;
+		
+		return (dampedValue + 1) / 2.0;
 	}
 
 	ENDCG

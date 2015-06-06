@@ -3,28 +3,26 @@ Shader "Custom/Water Ripple/Desktop"
 	Properties 
 	{
 		_Color ("Color Tint", COLOR) = (1, 1, 1, 1)
-		_WaterTex ("Diffuse", 2D) = "white" {}
-		
-		//_MainTex ("Base (RGB)", 2D) = "black" {}
-		
-		_Height ("Splash Height", Range(0, 1)) = 0.1		
+		_Height ("Splash Height", Range(0, 1)) = 0.1	
 		_SpecColor ("Specular Color", COLOR) = (1, 1, 1 ,1)
-		_Cube ("Cubemap", CUBE) = "" {}
+		_Cube ("Cubemap", CUBE) = "black" {}
+		_Fade ("Fade", FLOAT) = 0.1
+		
+		[HideInInspector] _MainTex ("Wave Map", 2D) = "clear" {}
 	}
 	
 	
 	Subshader 
 	{
-		Tags { "IgnoreProjector"="True" "Queue"="Transparent"}
- 
+		Tags { "IgnoreProjector" = "True" "Queue" = "Transparent" "RenderType" = "Transparent" }
  		
         GrabPass 
         {
             Name "WaterGrab"
         }
  		
- 		//Blend SrcAlpha OneMinusSrcAlpha
  		//ZWrite Off
+ 		//Blend SrcAlpha OneMinusSrcAlpha
  		
 		CGPROGRAM
 		#pragma surface surf BlinnPhong vertex:vert noshadow
@@ -32,24 +30,23 @@ Shader "Custom/Water Ripple/Desktop"
 		//#pragma glsl
  		#include "UnityCG.cginc"
 	
+		float4 _Color;
 		float _Height;
-		float4 _LightDir;
 
 		sampler2D _MainTex;
 		float4 _MainTex_TexelSize;
 		
-		sampler2D _WaterTex;
-		samplerCUBE _Cube;
+		sampler2D _CameraDepthTexture;
 		
-		float4 _Color;
+		samplerCUBE _Cube;
 		
 		struct Input 
 		{
 			float2 uv_MainTex;
 			float2 uv_WaterTex;
 			float3 worldRefl;
-			float3 waterNormal;
 			float4 screenPos;
+			float depth;
           	INTERNAL_DATA
 		};
 
@@ -60,43 +57,49 @@ Shader "Custom/Water Ripple/Desktop"
 			float3 texSize = float3(_MainTex_TexelSize.x, -_MainTex_TexelSize.x, 0);
 	 		float4 uv = float4(v.texcoord.xy, 0, 0);
 	 		
-			float samples = tex2Dlod(_MainTex, float4(v.texcoord.xy, 0, 0)).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.xzzz).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.yzzz).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.zxzz).r;
-			samples += tex2Dlod(_MainTex, uv + texSize.zyzz).r;
-			samples /= 5;
+			
+			float samples = tex2Dlod(_MainTex, uv + texSize.xzzz).r * 2 - 1;
+			samples += tex2Dlod(_MainTex, uv + texSize.yzzz).r * 2 - 1;
+			samples += tex2Dlod(_MainTex, uv + texSize.zxzz).r * 2 - 1;
+			samples += tex2Dlod(_MainTex, uv + texSize.zyzz).r * 2 - 1;
+			samples  /= 4;
 			v.vertex.y += samples * _Height;
 			
-			fixed right		= tex2Dlod(_MainTex, uv + texSize.xzzz).r;
-			fixed left		= tex2Dlod(_MainTex, uv + texSize.yzzz).r;
-			fixed top		= tex2Dlod(_MainTex, uv + texSize.zxzz).r;
-			fixed bottom	= tex2Dlod(_MainTex, uv + texSize.zyzz).r;
+			fixed right		= tex2Dlod(_MainTex, uv + texSize.xzzz * 2).r * 2 - 15;
+			fixed left		= tex2Dlod(_MainTex, uv + texSize.yzzz * 2).r * 2 - 15;
+			fixed top		= tex2Dlod(_MainTex, uv + texSize.zxzz * 2).r * 2 - 15;
+			fixed bottom	= tex2Dlod(_MainTex, uv + texSize.zyzz * 2).r * 2 - 15;
 			
             float3 va = normalize(float3(1, left - right, 0));
             float3 vb = normalize(float3(0, bottom - top, 1));
 			
 			v.normal = normalize(float3(1, 1, 1));
-	    	v.normal.xz = cross(va, vb).xz * (_Height);
+	    	v.normal.xz = cross(va, vb).xz;
 	    	v.normal = normalize(v.normal);
 	    	
-	    	o.waterNormal = v.normal;
+	    	o.depth = -mul(UNITY_MATRIX_MV, v.vertex).z * _ProjectionParams.w;
 		}
 
+		float _Fade;
 		sampler2D _GrabTexture;
 		void surf(Input IN, inout SurfaceOutput o)
 		{
 			float4 screenPos = IN.screenPos;
-			screenPos.xy += (IN.waterNormal.xz) / IN.screenPos.w;
+			screenPos.xy += (o.Normal.xz * _Height) / IN.screenPos.w;
 		
+			float depth = LinearEyeDepth (SAMPLE_DEPTH_TEXTURE_PROJ(_CameraDepthTexture, UNITY_PROJ_COORD(screenPos)));
+			
+			//float4 col = lerp(tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(screenPos)), _Color, saturate((depth - IN.depth) * _Fade));
 			float4 col = tex2Dproj(_GrabTexture, UNITY_PROJ_COORD(screenPos)) * _Color;
+			
 			o.Albedo = col.rgb;
 			o.Alpha = col.a;
+			
 			o.Gloss = 0.5;
 			o.Specular = 0.5;
-			o.Emission = texCUBE (_Cube, WorldReflectionVector (IN, o.Normal)).rgb * 0.5;
+			o.Emission = texCUBE (_Cube, WorldReflectionVector (IN, o.Normal)).rgb;
 		}
 		ENDCG
 	}
-	Fallback "Specular"
+	Fallback "Transparent/Specular"
 } // shader

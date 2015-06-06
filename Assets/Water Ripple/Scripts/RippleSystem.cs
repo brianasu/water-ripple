@@ -11,16 +11,17 @@ public class RippleSystem : MonoBehaviour
 	[SerializeField]
 	private float damping = 1;
 	[SerializeField]
-	private Projector targetProjector;
-	[SerializeField]
-	private int waterSize = 128;
+	private RenderTexture _bufferCurrent;
 	[SerializeField]
 	private Shader waterShader;
 	//
+	//
+	private int _waterSizeWidth;
+	private int _waterSizeHeight;
+	private RenderTextureFormat _format = RenderTextureFormat.ARGB32;
 	private int _count = 0;
 	private Dictionary<Shader, Material> _shaderMap = new Dictionary<Shader, Material>();
 	private RenderTexture _bufferPrev;
-	private RenderTexture _bufferCurrent;
 
 	private Material GetMaterial(Shader shader)
 	{
@@ -37,36 +38,38 @@ public class RippleSystem : MonoBehaviour
 		}
 	}
 
+	private void Awake()
+	{
+		this.useGUILayout = false;
+	}
+
 	private void Start()
 	{
 		RenderTexture.active = _bufferPrev;
-		GL.Clear(true, true, Color.black);
+		GL.Clear(true, true, Color.grey);
 		RenderTexture.active = null;
 
 		RenderTexture.active = _bufferCurrent;
-		GL.Clear(true, true, Color.black);
+		GL.Clear(true, true, Color.grey);
 		RenderTexture.active = null;
 	}
 
 	private void OnEnable()
 	{
-		_bufferPrev = new RenderTexture(waterSize, waterSize, 0, RenderTextureFormat.ARGBFloat);
-		_bufferCurrent = new RenderTexture(waterSize, waterSize, 0, RenderTextureFormat.ARGBFloat);
+		_waterSizeWidth = _bufferCurrent.width;
+		_waterSizeHeight = _bufferCurrent.height;
+		_format = _bufferCurrent.format;
+
+		_bufferPrev = new RenderTexture(_waterSizeWidth, _waterSizeHeight, 0, _format);
+		_bufferPrev.filterMode = _bufferCurrent.filterMode;
 
 		GetComponent<Renderer>().material.mainTexture = _bufferCurrent;
-
-		if(targetProjector != null)
-		{
-			targetProjector.material.SetTexture("_ShadowTex", _bufferCurrent);
-		}
 	}
 
 	private void OnDestroy()
 	{
 		Destroy(GetComponent<Renderer>().material);
-
 		Destroy(_bufferPrev);
-		Destroy(_bufferCurrent);
 
 		foreach (KeyValuePair<Shader, Material> item in _shaderMap)
 		{
@@ -83,9 +86,12 @@ public class RippleSystem : MonoBehaviour
 		GetMaterial(waterShader).SetFloat("_DropSize", dropSize);
 		GetMaterial(waterShader).SetFloat("_Damping", damping);
 
+		var scratchRT = RenderTexture.GetTemporary(_waterSizeWidth, _waterSizeHeight, 0, _format);
+		scratchRT.filterMode = _bufferCurrent.filterMode;
+
 		if(Input.GetMouseButton(0))
 		{
-			Camera cam = Camera.main;
+			var cam = Camera.main;
 			RaycastHit info;
 			if(GetComponent<Collider>().Raycast(cam.ScreenPointToRay(Input.mousePosition), out info, float.MaxValue))
 			{
@@ -103,7 +109,8 @@ public class RippleSystem : MonoBehaviour
 				}
 
 				GetMaterial(waterShader).SetVector("_MousePos", uv);
-				Graphics.Blit(_bufferCurrent, _bufferCurrent, GetMaterial(waterShader), 0);
+				Graphics.Blit(_bufferCurrent, scratchRT, GetMaterial(waterShader), 0);
+				Graphics.Blit(scratchRT, _bufferCurrent, GetMaterial(waterShader), 0);
 			}
 		}
 
@@ -111,24 +118,22 @@ public class RippleSystem : MonoBehaviour
 		if(rainDrops)
 		{
 			GetMaterial(waterShader).SetVector("_MousePos", Random.onUnitSphere);
-			Graphics.Blit(_bufferCurrent, _bufferCurrent, GetMaterial(waterShader), 0);
+			Graphics.Blit(_bufferCurrent, scratchRT, GetMaterial(waterShader), 0);
+			Graphics.Blit(scratchRT, _bufferCurrent, GetMaterial(waterShader), 0);
 		}
 
 		UpdateWater();
+
+		RenderTexture.ReleaseTemporary(scratchRT);
 	}
 
 	private void UpdateWater()
 	{
-		RenderTexture bufferOne = (_count % 2 == 0) ? _bufferCurrent : _bufferPrev;
-		RenderTexture bufferTwo = (_count % 2 == 0) ? _bufferPrev : _bufferCurrent;
+		var bufferOne = (_count % 2 == 0) ? _bufferCurrent : _bufferPrev;
+		var bufferTwo = (_count % 2 == 0) ? _bufferPrev : _bufferCurrent;
 		_count++;
 
 		GetMaterial(waterShader).SetTexture("_PrevTex", bufferTwo);
 		Graphics.Blit(bufferOne, bufferTwo, GetMaterial(waterShader), 1);
 	}
-
-//	private void OnGUI()
-//	{
-//		GUILayout.Label(_bufferCurrent);
-//	}
 }

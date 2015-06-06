@@ -980,9 +980,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rainDrops: 0
   dropSize: .0199999996
-  damping: .949999988
-  targetProjector: {fileID: 0}
-  waterSize: 128
+  damping: .980000019
+  _bufferCurrent: {fileID: 8400000, guid: da495d8c9ebd7441dbc5aa0c701943f5, type: 2}
   waterShader: {fileID: 4800000, guid: 35199131c6fdb45a984786354c663788, type: 3}
 --- !u!23 &1539103288
 MeshRenderer:
