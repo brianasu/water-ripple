@@ -89,6 +89,10 @@ public class RippleSystem : MonoBehaviour
 		var scratchRT = RenderTexture.GetTemporary(_waterSizeWidth, _waterSizeHeight, 0, _format);
 		scratchRT.filterMode = _bufferCurrent.filterMode;
 
+		RenderTexture.active = scratchRT;
+		GL.Clear(true, true, Color.grey);
+		RenderTexture.active = null;
+
 		if(Input.GetMouseButton(0))
 		{
 			var cam = Camera.main;
