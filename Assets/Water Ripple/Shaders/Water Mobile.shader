@@ -15,7 +15,7 @@ Shader "Custom/Water Ripple/Mobile"
 	{
 		float4 pos : POSITION;
 		float2 uv[4] : TEXCOORD0;
-		float2 uvWater : TEXCOORD1;
+		float2 uvWater : TEXCOORD5;
 	};
 
 	sampler2D _MainTex;

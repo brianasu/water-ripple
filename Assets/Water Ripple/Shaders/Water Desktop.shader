@@ -8,7 +8,7 @@ Shader "Custom/Water Ripple/Desktop"
 		_Cube ("Cubemap", CUBE) = "black" {}
 		_Fade ("Fade", FLOAT) = 0.1
 		
-		[HideInInspector] _MainTex ("Wave Map", 2D) = "clear" {}
+		[HideInInspector] _MainTex ("Wave Map", 2D) = "gray" {}
 	}
 	
 	
@@ -63,7 +63,7 @@ Shader "Custom/Water Ripple/Desktop"
 			samples += tex2Dlod(_MainTex, uv + texSize.zxzz).r * 2 - 1;
 			samples += tex2Dlod(_MainTex, uv + texSize.zyzz).r * 2 - 1;
 			samples  /= 4;
-			v.vertex.y += samples * _Height;
+			v.vertex.y += (samples - 0.5) * _Height;
 			
 			fixed right		= tex2Dlod(_MainTex, uv + texSize.xzzz * 2).r * 2 - 15;
 			fixed left		= tex2Dlod(_MainTex, uv + texSize.yzzz * 2).r * 2 - 15;
@@ -85,7 +85,13 @@ Shader "Custom/Water Ripple/Desktop"
 		void surf(Input IN, inout SurfaceOutput o)
 		{
 			float4 screenPos = IN.screenPos;
+			#if UNITY_UV_STARTS_AT_TOP 
+			screenPos.y = IN.screenPos.w-screenPos.y;
+			#endif
+			
 			screenPos.xy += (o.Normal.xz * _Height) / IN.screenPos.w;
+			
+		
 		
 			float depth = LinearEyeDepth (SAMPLE_DEPTH_TEXTURE_PROJ(_CameraDepthTexture, UNITY_PROJ_COORD(screenPos)));
 			

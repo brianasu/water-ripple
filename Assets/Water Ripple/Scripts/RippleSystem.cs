@@ -60,7 +60,7 @@ public class RippleSystem : MonoBehaviour
 		_waterSizeHeight = _bufferCurrent.height;
 		_format = _bufferCurrent.format;
 
-		_bufferPrev = new RenderTexture(_waterSizeWidth, _waterSizeHeight, 0, _format);
+		_bufferPrev = new RenderTexture(_waterSizeWidth, _waterSizeHeight, 0, _format, RenderTextureReadWrite.Linear);
 		_bufferPrev.filterMode = _bufferCurrent.filterMode;
 
 		GetComponent<Renderer>().material.mainTexture = _bufferCurrent;
@@ -86,7 +86,7 @@ public class RippleSystem : MonoBehaviour
 		GetMaterial(waterShader).SetFloat("_DropSize", dropSize);
 		GetMaterial(waterShader).SetFloat("_Damping", damping);
 
-		var scratchRT = RenderTexture.GetTemporary(_waterSizeWidth, _waterSizeHeight, 0, _format);
+		var scratchRT = RenderTexture.GetTemporary(_waterSizeWidth, _waterSizeHeight, 0, _format, RenderTextureReadWrite.Linear);
 		scratchRT.filterMode = _bufferCurrent.filterMode;
 
 		RenderTexture.active = scratchRT;

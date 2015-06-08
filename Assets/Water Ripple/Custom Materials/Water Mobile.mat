@@ -26,7 +26,7 @@ Material:
           name: _WaterTex
         second:
           m_Texture: {fileID: 2800000, guid: 39014b7780119446cb5405705f8a2e40, type: 3}
-          m_Scale: {x: 2, y: 2}
+          m_Scale: {x: 4, y: 4}
           m_Offset: {x: 0, y: 0}
       data:
         first:
@@ -54,7 +54,7 @@ Material:
       data:
         first:
           name: _Displacement
-        second: .0500000007
+        second: .100000001
     m_Colors:
       data:
         first:

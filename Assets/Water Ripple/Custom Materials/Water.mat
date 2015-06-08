@@ -30,6 +30,13 @@ Material:
           m_Offset: {x: 0, y: 0}
       data:
         first:
+          name: _Cube
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
           name: _Displacement
         second:
           m_Texture: {fileID: 0}
@@ -42,13 +49,6 @@ Material:
           m_Texture: {fileID: 8900000, guid: cdb44e1abe4404ac2b561fd74ea92d78, type: 2}
           m_Scale: {x: 1, y: 1}
           m_Offset: {x: 0, y: 0}
-      data:
-        first:
-          name: _Cube
-        second:
-          m_Texture: {fileID: 0}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
     m_Floats:
       data:
         first:
@@ -57,7 +57,11 @@ Material:
       data:
         first:
           name: _Height
-        second: .0500000007
+        second: .200000003
+      data:
+        first:
+          name: _Fade
+        second: .100000001
     m_Colors:
       data:
         first:
@@ -66,7 +70,7 @@ Material:
       data:
         first:
           name: _Color
-        second: {r: .301038057, g: .585934103, b: .639705896, a: 1}
+        second: {r: 0, g: .705145776, b: .838235259, a: 1}
       data:
         first:
           name: _SpecColor
