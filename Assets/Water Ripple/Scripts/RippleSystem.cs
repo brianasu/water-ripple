@@ -83,8 +83,10 @@ public class RippleSystem : MonoBehaviour
 	{
 		damping = Mathf.Clamp(damping, 0, 1);
 
-		GetMaterial(waterShader).SetFloat("_DropSize", dropSize);
-		GetMaterial(waterShader).SetFloat("_Damping", damping);
+        var material = GetMaterial(waterShader);
+
+        material.SetFloat("_DropSize", dropSize);
+		material.SetFloat("_Damping", damping);
 
 		var scratchRT = RenderTexture.GetTemporary(_waterSizeWidth, _waterSizeHeight, 0, _format, RenderTextureReadWrite.Linear);
 		scratchRT.filterMode = _bufferCurrent.filterMode;
@@ -112,16 +114,16 @@ public class RippleSystem : MonoBehaviour
 					uv = new Vector2(point.x, point.z);
 				}
 
-				GetMaterial(waterShader).SetVector("_MousePos", uv);
-				Graphics.Blit(_bufferCurrent, scratchRT, GetMaterial(waterShader), 0);
-				Graphics.Blit(scratchRT, _bufferCurrent, GetMaterial(waterShader), 0);
+                material.SetVector("_MousePos", uv);
+				Graphics.Blit(_bufferCurrent, scratchRT, material, 0);
+				Graphics.Blit(scratchRT, _bufferCurrent, material, 0);
 			}
 		}
 
 		// Raindrops
 		if(rainDrops)
 		{
-			GetMaterial(waterShader).SetVector("_MousePos", Random.onUnitSphere);
+            material.SetVector("_MousePos", Random.onUnitSphere);
 			Graphics.Blit(_bufferCurrent, scratchRT, GetMaterial(waterShader), 0);
 			Graphics.Blit(scratchRT, _bufferCurrent, GetMaterial(waterShader), 0);
 		}
@@ -137,7 +139,16 @@ public class RippleSystem : MonoBehaviour
 		var bufferTwo = (_count % 2 == 0) ? _bufferPrev : _bufferCurrent;
 		_count++;
 
-		GetMaterial(waterShader).SetTexture("_PrevTex", bufferTwo);
-		Graphics.Blit(bufferOne, bufferTwo, GetMaterial(waterShader), 1);
-	}
+        var scratchRT = RenderTexture.GetTemporary(_bufferCurrent.width, _bufferCurrent.height, 0, _format, RenderTextureReadWrite.Linear);
+        scratchRT.filterMode = _bufferCurrent.filterMode;
+
+        RenderTexture.active = scratchRT;
+        GL.Clear(true, true, Color.grey);
+        RenderTexture.active = null;
+
+        GetMaterial(waterShader).SetTexture("_PrevTex", bufferTwo);
+		Graphics.Blit(bufferOne, scratchRT, GetMaterial(waterShader), 1);
+        Graphics.Blit(scratchRT, bufferTwo);
+        RenderTexture.ReleaseTemporary(scratchRT);
+    }
 }
